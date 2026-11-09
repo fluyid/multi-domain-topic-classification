@@ -74,7 +74,7 @@ This is tight. If a day slips, cut in this order: Phase 9 (POS + small-text), th
 ## Planned repo structure
 
 ```
-nlp-topic-classification/
+multi-domain-topic-classification/
 ├── PLAN.md                  # this file
 ├── README.md                # project summary, how to run, results table
 ├── pyproject.toml           # dependencies (managed by uv)
@@ -98,16 +98,16 @@ nlp-topic-classification/
 ## Phase 0: Setup
 
 **Steps**
-- [ ] 0.1 Pick the machine for local work (Mac M2 8GB or Windows ROG 32GB)
-- [ ] 0.2 Install `uv`, then install Python 3.15 with `uv python install 3.15`
-- [ ] 0.3 Create the repo on GitHub (`nlp-topic-classification`), clone it locally
-- [ ] 0.4 `uv init`, then add the first packages: `scikit-learn pandas numpy matplotlib nltk datasets`
-- [ ] 0.5 Make the folder structure above and add a `.gitignore`
-- [ ] 0.6 Copy this plan in as `PLAN.md`
-- [ ] 0.7 First commit and push (Kai types the git commands)
-- [ ] 0.8 Check that NLTK (and maybe spaCy) install and import on 3.15
-- [ ] 0.9 Write `src/topicclf/device.py` with `get_device()`: use CUDA if available, else Apple MPS, else CPU; print which one was chosen
-- [ ] 0.10 Test-install `small-text` in a throwaway environment (so we know early if it works on 3.15)
+- [x] 0.1 Pick the machine for local work (Mac M2 8GB or Windows ROG 32GB)
+- [x] 0.2 Install `uv`, then install Python 3.15 with `uv python install 3.15`
+- [x] 0.3 Create the repo on GitHub (`multi-domain-topic-classification`, package name `topicclf`)
+- [x] 0.4 `uv init`, then add the first packages: `scikit-learn pandas numpy matplotlib nltk datasets`
+- [x] 0.5 Make the folder structure above and add a `.gitignore`
+- [x] 0.6 Copy this plan in as `PLAN.md`
+- [x] 0.7 First commit and push (Kai types the git commands)
+- [x] 0.8 Check that NLTK (spaCy not needed so far) install and import on 3.15
+- [x] 0.9 Write `src/topicclf/device.py` with `get_device()`: use CUDA if available, else Apple MPS, else CPU; print which one was chosen
+- [x] 0.10 Test-install `small-text` in a throwaway environment: small-text 1.4.1 installs and imports on Python 3.15.2
 
 **Concepts to learn:** terminal basics, virtual environments (why each project gets its own "toy box" of packages), what `pyproject.toml` is, git basics (`add`, `commit`, `push`, `status`), what `.gitignore` does.
 
@@ -368,8 +368,9 @@ nlp-topic-classification/
 |---|---|---|
 | 2026-11-09 | Read both papers, chose data tiers (20NG, AG News, TweetTopic, academic), wrote this plan | Answer the open questions, then Phase 0 |
 | 2026-11-09 | Decided: both Option A and B, `get_device()` helper, coding done by Sun 15 Nov, public repo, small-text as optional 9b | Phase 0 |
+| 2026-11-09 | Phase 0 done on Windows (ROG): uv 0.13.7, Python 3.15.2 pinned, requires-python >=3.12, deps added, .gitignore/.gitattributes, repo pushed to github.com/fluyid/multi-domain-topic-classification, `get_device()` + first pytest passing, small-text 1.4.1 works on 3.15 | Phase 1: explore 20 Newsgroups |
 
 ## Open questions
 
-- Report requirements: Kai will add the IU writing guidelines PDF to the Project
+- Report requirements: guidelines PDF is now in the Project; read it before Phase 12
 - Public now, or private until just before submission? (Kai's call, see Key decisions)
