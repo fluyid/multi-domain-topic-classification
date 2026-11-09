@@ -1,0 +1,26 @@
+# Python build leftovers
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environment (rebuilt any time with `uv sync`)
+.venv/
+
+# Datasets: downloaded by our scripts, never committed
+data/
+
+# Saved models: too big for git
+models/
+*.joblib
+
+# Editor and OS clutter
+.idea/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+
+# Secrets like API keys
+.env

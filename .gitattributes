@@ -1,0 +1,10 @@
+# Store all text files with LF line endings, whatever OS we're on
+* text=auto eol=lf
+
+# Windows scripts need Windows line endings
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Never treat these as text
+*.png binary
+*.pdf binary

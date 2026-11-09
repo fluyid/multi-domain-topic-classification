@@ -1,0 +1,30 @@
+[project]
+name = "topicclf"
+version = "0.1.0"
+description = "Multi-domain topic classification (news, academic, social media) with classical ML and transformers"
+readme = "README.md"
+authors = [
+    { name = "Kailash Nath" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "datasets>=5.1.0",
+    "matplotlib>=3.11.2",
+    "nltk>=3.10.4",
+    "numpy>=2.5.4",
+    "pandas>=3.1.1",
+    "scikit-learn>=1.9.1",
+]
+
+[project.scripts]
+topicclf = "topicclf:main"
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "pytest>=9.2.0",
+]
