@@ -48,10 +48,40 @@ Build an NLP system that sorts documents into topics (multi-class classification
 | small-text library | **Optional Phase 9b**, scikit-learn backend only | Our data is already labelled, so active learning is a *simulation* (like the paper's experiment). Nice extra, not core. Latest stable is 1.4.1 (Aug 2024); test the install on day 1. |
 | Stemming / lemmatization | **NLTK** first (check spaCy works on 3.15) | NLTK is pure Python, so it installs on any version. |
 | Code layout | Reusable code in `src/`, exploring in `notebooks/` | Notebooks are great for looking at data, bad for code you reuse. Put it in `src/` once and import it everywhere. |
+| Report size | **7 to 10 pages of text** (IU guideline for bachelor) | Very little space. Four headline experiments go in the body; everything else goes in appendices or stays in the repo. Decide what to show before running extras. |
+| Loading datasets | Parquet/CSV files only, no loading scripts | The `datasets` library (v5) no longer runs dataset loading scripts. TweetTopic and the original WOS repo are script-based, so we load TweetTopic from the Hub's auto-converted Parquet branch and WOS from a CSV mirror. |
 | Data in git | **Never commit datasets** | They're big, and they can be re-downloaded by a script. The repo stores code, results and figures. |
 | Scope | **Both A and B**, then compare | B = each domain trained and tested on its own labels. A = shared labels + mixed and cross-domain training. Comparing them answers: "does one shared model lose accuracy versus specialists?" |
 
-**Note on "labelling":** the datasets come already labelled by humans. Our job is not to label them; it's to **clean** them, **map** labels into a shared set (if we pick Option A), and **split** them properly.
+**Note on "labelling":** the datasets come already labelled by humans. Our job is not to label them; it's to **clean** them, **map** labels into a shared set (for Option A), and **split** them properly.
+
+---
+
+## What the report needs (from the IU Project Report guidelines)
+
+Read on 10 Nov. These shape what we collect **while coding**, not just what we write at the end.
+
+- **Length:** 7 to 10 pages of text. Introduction 10 to 15%, main body 70 to 80%, conclusion 10 to 15%.
+- **Style:** third person, no "I" or "we", factual and precise. Citation and formatting rules are in separate myCampus guidelines (still to check).
+- **It is a project report, not only a results paper.** It must cover objective, planning, phases and milestones, difficulties, resources, risk analysis, goal achievement, and reflection (including what it means for future studies and career).
+- **Parts:** title page, table of contents, list of figures/tables, list of abbreviations, text, reference list, appendices.
+
+| Criterion | Weight | What feeds it in this project |
+|---|---|---|
+| Process | 25% | This plan, the phases, the schedule, one-change-at-a-time experiments |
+| Quality | 25% | Depth of reflection: why results look the way they do, error analysis, limitations |
+| Transfer | 15% | Linking results to theory (TF-IDF, Naive Bayes assumptions, domain shift, both papers) |
+| Creativity | 15% | Cross-domain experiment, specialist vs shared model, optional POS or active learning |
+| Resources | 10% | Tool choices with reasons, CPU-first approach, training time and Colab compute used |
+| Documentation | 10% | Clean writing, formal rules, spelling |
+
+**The four headline experiments for the report body** (everything else is appendix material):
+1. Preprocessing comparison (raw vs stop vs stem vs lemma)
+2. Learning curves (small to large training sets)
+3. Model comparison (classical vs embeddings vs transformer, accuracy against training time)
+4. Cross-domain matrix and specialist vs shared model (Option A vs B)
+
+**Collect as we go:** every difficulty and how it was solved (Project journal below), training times, Colab units used, and dates each phase finished.
 
 ---
 
@@ -123,6 +153,7 @@ multi-domain-topic-classification/
 ## Phase 1: Explore the first dataset (20 Newsgroups)
 
 **Steps**
+- [ ] 1.0 Smoke test (15 min): download all four datasets once and print their sizes, so loading problems show up on day 2 and not day 4
 - [ ] 1.1 Load 20 Newsgroups with `remove=('headers', 'footers', 'quotes')`
 - [ ] 1.2 Look at real examples from 3 or 4 classes (read them yourself)
 - [ ] 1.3 Count documents per class (is it balanced?)
@@ -196,7 +227,7 @@ multi-domain-topic-classification/
 - [ ] 4.4 Logistic Regression
 - [ ] 4.5 Linear SVM (`LinearSVC`)
 - [ ] 4.6 Optional: Random Forest (to show a model that is usually *worse* on sparse text, and why)
-- [ ] 4.7 Small hyperparameter search on a **validation** split (e.g. `alpha` for NB, `C` for SVM/LR)
+- [ ] 4.7 Small hyperparameter search with cross-validation on the **training** data only (e.g. `alpha` for NB, `C` for SVM/LR)
 - [ ] 4.8 Save each fitted pipeline with `joblib`
 
 **Concepts to learn:** supervised learning, what each model does (intuition, not heavy maths), hyperparameters, validation set vs test set, overfitting.
@@ -213,9 +244,9 @@ multi-domain-topic-classification/
 
 **Steps**
 - [ ] 5.1 `evaluate.py`: accuracy, macro-F1, per-class precision/recall, confusion matrix
-- [ ] 5.2 Run every experiment with 5 random seeds and report mean ± std (like the Small-Text paper)
-- [ ] 5.3 **Learning curves:** train on 500, 1k, 2k, 5k, 10k and all docs, then plot accuracy and macro-F1 against training size
-- [ ] 5.4 **Preprocessing comparison:** the 4 variants from Phase 2 × the best 2 or 3 models
+- [ ] 5.2 Seeds: for each training size below "all", draw 5 different random subsets (5 seeds) and report mean ± std, like the Small-Text paper. At full size these models give the same answer every run, so one run is enough there.
+- [ ] 5.3 **Learning curves:** fix one preprocessing variant, train on 500, 1k, 2k, 5k, 10k and all docs, then plot accuracy and macro-F1 against training size
+- [ ] 5.4 **Preprocessing comparison:** at full training size, the 4 variants from Phase 2 × the best 2 or 3 models
 - [ ] 5.5 Record training time per model (speed and energy matter too)
 - [ ] 5.6 Save every result as a row in `results/*.csv` (never just print it)
 - [ ] 5.7 Commit results and figures
@@ -224,7 +255,8 @@ multi-domain-topic-classification/
 
 **What can go wrong**
 - Reporting a single lucky run. Fix: 5 seeds.
-- Too big an experiment grid that takes forever. Keep it to: 4 preprocessing variants × 3 models × 6 sizes × 5 seeds, and add more only if needed.
+- Too big an experiment grid that takes forever. Keep the two experiments separate: preprocessing (4 variants × 3 models, full data) and learning curves (3 models × 6 sizes × 5 seeds, one variant). Don't multiply them together.
+- Thinking 5 seeds always means 5 different results. Naive Bayes and a linear SVM on the same data give the same result each time; the seed only matters when it changes **which documents** are sampled.
 - Results only on screen and lost. Fix: always write to CSV.
 
 **Done when:** you have the learning-curve figure and the preprocessing table for 20 Newsgroups.
@@ -236,17 +268,21 @@ multi-domain-topic-classification/
 **Datasets**
 | Domain | Dataset | Notes |
 |---|---|---|
-| Forum / social | 20 Newsgroups | already done |
-| News | AG News | 4 classes, 120k train, great for scaling |
-| Social media | TweetTopic (`cardiffnlp/tweet_topic_single`) | 6 classes, about 4.4k train tweets, short texts |
-| Academic | Web of Science (WOS) or arXiv abstracts | research fields; confirm source and licence when we get here |
+| Forum posts | 20 Newsgroups (scikit-learn) | 20 classes; Usenet posts from the 1990s, so call it "discussion forum", not modern social media. Has train/test; carve validation from train. |
+| News | AG News (`fancyzhx/ag_news`) | 4 classes, 120k train / 7.6k test, Parquet. No validation split; carve one from train. |
+| Social media | TweetTopic (`cardiffnlp/tweet_topic_single`) | 6 classes. Use `train_all` (4,374) / `validation_2021` (189) / `test_2021` (1,693) as the dataset card recommends. Script-based repo: load with `revision="refs/convert/parquet"`. Check class balance; expect it to be uneven. |
+| Academic | Web of Science, 46,985 abstracts (`river-martin/web-of-science-with-label-texts`) | 7 research domains (CS, Electrical Eng., Psychology, Mechanical Eng., Civil Eng., Medical Science, Biochemistry). CSV with train/validate/test already split. Cite Kowsari et al. (2017). |
 
 **Steps**
 - [ ] 6.1 Add a loader for each dataset to `data.py` (same common format)
 - [ ] 6.2 Quick exploration of each (class balance, lengths, examples)
 - [ ] 6.3 Remove duplicates, especially across train and test
 - [ ] 6.4 Run the Phase 5 pipeline on each domain separately (this is Option B, and it's needed either way)
-- [ ] 6.5 **Option A only:** design the shared label set (e.g. Sports, Business, Sci/Tech, Politics/World) and write the mapping table from each dataset's labels; drop classes that don't map. Explain each mapping in the report.
+- [ ] 6.5 **Option A:** build the shared label set and the mapping table (below); drop classes that don't map. Explain each mapping in the report.
+  - **Core set (news ↔ tweets), 3 classes:** Sports, Business, Sci/Tech. AG News: Sports, Business, Sci/Tech (World dropped). TweetTopic: sports_&_gaming, business_&_entrepreneurs, science_&_technology (the other three dropped).
+  - **20 Newsgroups** only has matches for Sports (rec.sport.*) and Sci/Tech (comp.*, sci.*), so it joins as extra training data and is tested on those 2 classes only.
+  - **Academic** has no matching topics (every abstract would be "Sci/Tech"), so it stays Option B only. Say this openly in the report as a limitation.
+  - Known impurity: the tweet class mixes sports with gaming. Note it, don't hide it.
 - [ ] 6.6 Balance the classes/domains where needed (e.g. downsample AG News when comparing with tweets)
 
 **Concepts to learn:** domains, domain shift, label mapping, deduplication, downsampling.
@@ -255,6 +291,8 @@ multi-domain-topic-classification/
 - Bad label mapping (e.g. putting "pop culture" into "Business"). Every mapping needs a one-line justification.
 - Comparing accuracy across datasets with different numbers of classes. Always show each dataset's Dummy baseline next to it.
 - Tweets contain placeholders like `{{URL}}` and `{@user@}`. Decide how to handle them in preprocessing.
+- A shared label set with only 2 classes would not be "multi-class" any more. That's why the core set is the 3-class news ↔ tweets one.
+- Dataset loading scripts no longer run. If a `load_dataset` call complains about a script, use the Parquet branch or a CSV/Parquet mirror.
 
 **Done when:** a results table per domain, plus (Option A) the mapping table.
 
@@ -266,6 +304,7 @@ multi-domain-topic-classification/
 - [ ] 7.1 Train on news, test on tweets (and the reverse)
 - [ ] 7.2 Train on news + forum, test on tweets
 - [ ] 7.3 Train on all domains mixed, test on each domain separately
+- [ ] 7.3b **Specialist vs shared (the A vs B comparison):** on the same 3 classes and the same test sets, compare a model trained only in-domain against the mixed-domain model. Same labels and same test set, otherwise the comparison isn't fair.
 - [ ] 7.4 Make a matrix figure: rows = train domain, columns = test domain
 - [ ] 7.5 Error analysis: read 20 misclassified documents and group the reasons
 
@@ -280,12 +319,13 @@ multi-domain-topic-classification/
 ## Phase 8: Advanced models (Google Colab)
 
 **Steps**
-- [ ] 8.1 Colab notebook in the repo: clone the repo, install deps, load data with the same `data.py`
+- [ ] 8.1 Colab notebook in the repo: clone the repo, install our package with `pip install -e . --no-deps` (so it doesn't replace Colab's own numpy/pandas and break the runtime), add only the packages Colab lacks, load data with the same `data.py`
 - [ ] 8.2 Sentence embeddings (e.g. a small sentence-transformers model) + Logistic Regression
 - [ ] 8.3 Fine-tune DistilBERT (or similar) on each domain
 - [ ] 8.4 Optional: SetFit (from the Small-Text paper) on the small datasets
 - [ ] 8.5 Evaluate with the **same** splits and metrics, then add rows to the same results CSVs
-- [ ] 8.6 Compare accuracy vs training time vs compute cost against the classical models
+- [ ] 8.6 Compare accuracy vs training time vs compute cost against the classical models (feeds the "Resources" criterion)
+- [ ] 8.7 Write down the Colab compute units used and the GPU type
 
 **Concepts to learn:** embeddings, pretrained models, transfer learning, fine-tuning, GPU vs CPU, epochs and batches.
 
@@ -298,9 +338,11 @@ multi-domain-topic-classification/
 
 ---
 
+> **Pick at most one of 9 and 9b for the report body.** With 10 pages there is room for one short "extra" section. The other can live in the repo and get one sentence.
+
 ## Phase 9 (optional): The genre side quest (POS paper)
 
-- [ ] 9.1 Turn each document into a POS-tag frequency vector (like Schulman and Barbosa)
+- [ ] 9.1 Turn each document into a POS-tag frequency vector (like Schulman and Barbosa), on a sample of about 2k docs per domain (POS tagging everything would take too long)
 - [ ] 9.2 Classify **text type** (news vs tweet vs academic vs forum) using only POS features
 - [ ] 9.3 Check that POS features are weak for **topic**, but strong for **genre**
 - [ ] 9.4 One short report section linking back to the paper
@@ -341,11 +383,17 @@ multi-domain-topic-classification/
 
 ## Phase 12: Report
 
-- [ ] 12.1 Read the IU writing guidelines (page limits, structure, citation style)
-- [ ] 12.2 Outline: Introduction, Related work (both papers + the textbook), Data, Method, Experiments, Results, Discussion (limitations, cross-domain, energy), Conclusion
-- [ ] 12.3 Write the sections in order of easiest first: Data, Method, Results
-- [ ] 12.4 Add the GitHub link and the test-set metrics
-- [ ] 12.5 Proofread (no em dashes)
+- [x] 12.1 Read the IU Project Report guidelines (summary near the top of this file)
+- [ ] 12.2 Get the two other myCampus documents: "Guidelines for Structuring and Formatting Academic Papers" and the citation guidelines
+- [ ] 12.3 Outline, 7 to 10 pages:
+  - **Introduction (about 1 to 1.5 pages):** problem, objective, planned approach and why, tools, data collection, structure of the report
+  - **Main body (about 6 to 7.5 pages):** project phases and milestones; data and preprocessing; models; the four headline experiments with interim results; difficulties and how they were solved; risk analysis; resources used; goal achievement; reflection against theory and both papers
+  - **Conclusion (about 1 to 1.5 pages):** what the results mean, limitations, improvements, what it means for future studies and career
+  - **Appendices:** full result tables, extra figures, label mapping table, repo link
+- [ ] 12.4 Choose the 4 to 6 figures/tables that go in the body; the rest go to the appendix
+- [ ] 12.5 Write in third person ("The project compared...", not "I compared...")
+- [ ] 12.6 Add the GitHub link and the test-set metrics
+- [ ] 12.7 Proofread (no em dashes), then submit the affidavit in myCampus before uploading
 
 ---
 
@@ -362,6 +410,19 @@ multi-domain-topic-classification/
 
 ---
 
+## Project journal (difficulties and decisions, for the report)
+
+The report must describe difficulties and how they were handled. Add one line whenever something goes wrong or a decision changes.
+
+| Date | Difficulty or decision | What was done | Lesson |
+|---|---|---|---|
+| 2026-11-09 | `uv` not recognised in the terminal | Added its folder to the user PATH | Tools installed with pip may not be on PATH |
+| 2026-11-09 | IDE created the environment with Python 3.13 instead of 3.15 | Pinned 3.15 with `.python-version`, rebuilt `.venv` | Pin the version in the project, don't rely on defaults |
+| 2026-11-09 | Colab runs an older Python than the dev machine | `requires-python >= 3.12` while developing on 3.15 | Separate "what I develop on" from "what I support" |
+| 2026-11-09 | Windows vs Mac line endings | `.gitattributes` forcing LF | Decide cross-platform rules before the first commit |
+| 2026-11-10 | TweetTopic and WOS use loading scripts that the current `datasets` library no longer runs | Load TweetTopic from the Hub's Parquet branch, WOS from a CSV mirror | Check data access early (step 1.0), not when you need it |
+| 2026-11-10 | A shared label set across all domains would shrink to 2 classes | Core cross-domain experiment limited to news ↔ tweets with 3 classes; academic stays per-domain | Scope experiments to what the data can support |
+
 ## Progress log
 
 | Date | Session summary | Next step |
@@ -369,8 +430,10 @@ multi-domain-topic-classification/
 | 2026-11-09 | Read both papers, chose data tiers (20NG, AG News, TweetTopic, academic), wrote this plan | Answer the open questions, then Phase 0 |
 | 2026-11-09 | Decided: both Option A and B, `get_device()` helper, coding done by Sun 15 Nov, public repo, small-text as optional 9b | Phase 0 |
 | 2026-11-09 | Phase 0 done on Windows (ROG): uv 0.13.7, Python 3.15.2 pinned, requires-python >=3.12, deps added, .gitignore/.gitattributes, repo pushed to github.com/fluyid/multi-domain-topic-classification, `get_device()` + first pytest passing, small-text 1.4.1 works on 3.15 | Phase 1: explore 20 Newsgroups |
+| 2026-11-10 | Plan review: read IU report guidelines (7 to 10 pages, third person, 6 criteria), verified datasets on the Hub, fixed dataset loading, label mapping, seeds and Colab install steps, added Project journal | Phase 1, starting with step 1.0 |
 
 ## Open questions
 
-- Report requirements: guidelines PDF is now in the Project; read it before Phase 12
+- Still needed from myCampus: formatting guidelines and citation guidelines (step 12.2)
+- Which optional extra goes in the report body: POS genre (9) or active learning (9b)? Decide on Saturday.
 - Public now, or private until just before submission? (Kai's call, see Key decisions)
